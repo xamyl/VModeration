@@ -111,11 +111,11 @@ client.on('messageCreate', async (message) => {
     message.channel.send(
       'Available commands:\n' +
         '`vhelp` - Displays this message\n' +
-        '`vk / vkick @user` - Kicks a user\n' +
-        '`vb / vban @user [reason]` - Bans a user with a reason\n' +
-        '`vm / vmute @user [duration in minutes]` - Mutes a user for the specified duration\n' +
+        '`vkick @user` - Kicks a user\n' +
+        '`vban @user [reason]` - Bans a user with a reason\n' +
+        '`vmute @user [duration in minutes]` - Mutes a user for the specified duration\n' +
         '`vmember` - Displays the total number of members in the server\n' +
-        '`vu / vunban [user ID]` - Unbans a user by their ID\n' +
+        '`vunban [user ID]` - Unbans a user by their ID\n' +
         '`vtop` - Shows the top message senders in the server\n' +
         '`vtope` - Shows the most commonly used emojis in the server'
     );
