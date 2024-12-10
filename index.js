@@ -15,10 +15,10 @@ const prefix = 'v';
 
 // Define commands and their aliases
 const commands = {
-  kick: ['vk', 'vkick'],
-  ban: ['vb', 'vban'],
-  mute: ['vm', 'vmute'],
-  unban: ['vu', 'vunban'],
+  kick: ['vkick'],
+  ban: ['vban'],
+  mute: ['vmute'],
+  unban: ['vunban'],
 };
 
 client.on('ready', () => {
