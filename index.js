@@ -76,10 +76,6 @@ const commands = [
     description: 'Displays the total number of members in the server',
   },
   {
-    name: 'help',
-    description: 'Displays a list of available commands',
-  },
-  {
     name: 'uwu',
     description: 'uwu',
   },
@@ -177,25 +173,6 @@ client.on('interactionCreate', async (interaction) => {
 
   if (commandName === 'membercount') {
     interaction.reply(`This server has ${interaction.guild.memberCount} members.`);
-  }
-
-  if (commandName === 'help') {
-    const embed = new EmbedBuilder()
-      .setColor('#0099ff')
-      .setTitle('Help - Available Commands')
-      .setDescription('Here is a list of available commands:')
-      .addFields(
-        { name: '/kick', value: 'Kick a user from the server.' },
-        { name: '/ban', value: 'Ban a user from the server with a reason.' },
-        { name: '/unban', value: 'Unban a user from the server by ID.' },
-        { name: '/mute', value: 'Mute a user for a specified duration.' },
-        { name: '/membercount', value: 'Displays the number of members in the server.' },
-        { name: '/help', value: 'Displays this help message.' },
-        { name: '/uwu', value: 'Responds with "uwu".' }
-      )
-      .setFooter('Use /command_name to execute any of these actions.');
-
-    interaction.reply({ embeds: [embed], ephemeral: true });
   }
 
   if (commandName === 'uwu') {
