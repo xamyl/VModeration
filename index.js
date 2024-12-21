@@ -1,5 +1,4 @@
-const fs = require('fs');
-const { Client, GatewayIntentBits, PermissionsBitField, EmbedBuilder } = require('discord.js');
+const { Client, GatewayIntentBits, REST, Routes, PermissionsBitField, EmbedBuilder } = require('discord.js');
 require('dotenv').config();
 
 const client = new Client({
@@ -11,114 +10,165 @@ const client = new Client({
   ],
 });
 
-const prefix = 'v';
+const commands = [
+  {
+    name: 'kick',
+    description: 'Kick a user from the server',
+    options: [
+      {
+        name: 'user',
+        type: 6,
+        description: 'The user to kick',
+        required: true,
+      },
+    ],
+  },
+  {
+    name: 'ban',
+    description: 'Ban a user from the server',
+    options: [
+      {
+        name: 'user',
+        type: 6,
+        description: 'The user to ban',
+        required: true,
+      },
+      {
+        name: 'reason',
+        type: 3,
+        description: 'The reason for the ban',
+        required: true,
+      },
+    ],
+  },
+  {
+    name: 'unban',
+    description: 'Unban a user from the server',
+    options: [
+      {
+        name: 'userid',
+        type: 3,
+        description: 'The ID of the user to unban',
+        required: true,
+      },
+    ],
+  },
+  {
+    name: 'mute',
+    description: 'Mute a user for a specific duration',
+    options: [
+      {
+        name: 'user',
+        type: 6,
+        description: 'The user to mute',
+        required: true,
+      },
+      {
+        name: 'duration',
+        type: 4,
+        description: 'The duration of the mute in minutes',
+        required: true,
+      },
+    ],
+  },
+  {
+    name: 'membercount',
+    description: 'Displays the total number of members in the server',
+  },
+];
 
-// Define commands and their aliases
-const commands = {
-  kick: ['vkick'],
-  ban: ['vban'],
-  mute: ['vmute'],
-  unban: ['vunban'],
-};
+client.once('ready', async () => {
+  console.log(`Logged in as ${client.user.tag}`);
 
-client.on('ready', () => {
-  console.log(`Logged in as ${client.user.tag}!`);
+  const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
+
+  try {
+    console.log('Started refreshing application (/) commands.');
+
+    await rest.put(Routes.applicationCommands(client.user.id), { body: commands });
+
+    console.log('Successfully reloaded application (/) commands.');
+  } catch (error) {
+    console.error(error);
+  }
 });
 
-client.on('messageCreate', async (message) => {
-  if (message.author.bot) return;
+client.on('interactionCreate', async (interaction) => {
+  if (!interaction.isCommand()) return;
 
-  if (!message.content.startsWith(prefix)) return;
+  const { commandName, options } = interaction;
 
-  const args = message.content.slice(prefix.length).trim().split(/ +/);
-  const inputCommand = args.shift().toLowerCase();
-
-  // Resolve the actual command from aliases
-  const command = Object.keys(commands).find((key) => commands[key].includes(inputCommand));
-
-  if (command === 'kick') {
-    if (!message.member.permissions.has(PermissionsBitField.Flags.KickMembers)) {
-      return message.reply('You do not have permission to kick members.');
+  if (commandName === 'kick') {
+    if (!interaction.member.permissions.has(PermissionsBitField.Flags.KickMembers)) {
+      return interaction.reply('You do not have permission to kick members.');
     }
-    const user = message.mentions.members.first();
-    if (!user) return message.reply('Please mention a user to kick.');
-    if (!user.kickable) return message.reply('I cannot kick this user.');
+    const user = options.getMember('user');
+    if (!user) return interaction.reply('User not found.');
+    if (!user.kickable) return interaction.reply('I cannot kick this user.');
     try {
       await user.kick();
-      message.channel.send(`${user.user.tag} has been kicked.`);
+      interaction.reply(`${user.user.tag} has been kicked.`);
     } catch (error) {
       console.error(error);
-      message.reply('An error occurred while trying to kick the user.');
+      interaction.reply('An error occurred while trying to kick the user.');
     }
   }
 
-  if (command === 'ban') {
-    if (!message.member.permissions.has(PermissionsBitField.Flags.BanMembers)) {
-      return message.reply('You do not have permission to ban members.');
+  if (commandName === 'ban') {
+    if (!interaction.member.permissions.has(PermissionsBitField.Flags.BanMembers)) {
+      return interaction.reply('You do not have permission to ban members.');
     }
-    const user = message.mentions.members.first();
-    if (!user) return message.reply('Please mention a user to ban.');
-    const reason = args.slice(1).join(' ') || 'No reason provided';
-    if (!user.bannable) return message.reply('I cannot ban this user.');
+    const user = options.getMember('user');
+    const reason = options.getString('reason');
+    if (!user) return interaction.reply('User not found.');
+    if (!user.bannable) return interaction.reply('I cannot ban this user.');
     try {
       await user.ban({ reason });
-      message.channel.send(`${user.user.tag} has been banned for: **${reason}**.`);
+      interaction.reply(`${user.user.tag} has been banned for: **${reason}**.`);
       try {
-        await user.user.send(`You have been banned from **${message.guild.name}** for reason: **${reason}**.`);
+        await user.user.send(`You have been banned from **${interaction.guild.name}** for reason: **${reason}**.`);
       } catch (dmError) {
         console.error('Failed to send DM:', dmError);
-        message.channel.send('Could not send a DM to the banned user.');
+        interaction.followUp('Could not send a DM to the banned user.');
       }
     } catch (error) {
       console.error(error);
-      message.reply('An error occurred while trying to ban the user.');
+      interaction.reply('An error occurred while trying to ban the user.');
     }
   }
 
-  if (command === 'mute') {
-    if (!message.member.permissions.has(PermissionsBitField.Flags.ModerateMembers)) {
-      return message.reply('You do not have permission to mute members.');
+  if (commandName === 'unban') {
+    if (!interaction.member.permissions.has(PermissionsBitField.Flags.BanMembers)) {
+      return interaction.reply('You do not have permission to unban members.');
     }
-    const user = message.mentions.members.first();
-    if (!user) return message.reply('Please mention a user to mute.');
-    const duration = parseInt(args[0]);
-    if (isNaN(duration)) return message.reply('Please specify a duration in minutes.');
+    const userId = options.getString('userid');
     try {
-      await user.timeout(duration * 60 * 1000); // Duration in milliseconds
-      message.channel.send(`${user.user.tag} has been muted for ${duration} minute(s).`);
+      await interaction.guild.members.unban(userId);
+      interaction.reply(`User with ID ${userId} has been unbanned.`);
     } catch (error) {
       console.error(error);
-      message.reply('An error occurred while trying to mute the user.');
+      interaction.reply('An error occurred while trying to unban the user.');
     }
   }
 
-  if (command === 'unban') {
-    if (!message.member.permissions.has(PermissionsBitField.Flags.BanMembers)) {
-      return message.reply('You do not have permission to unban members.');
+  if (commandName === 'mute') {
+    if (!interaction.member.permissions.has(PermissionsBitField.Flags.ModerateMembers)) {
+      return interaction.reply('You do not have permission to mute members.');
     }
-    const userId = args[0];
-    if (!userId) return message.reply('Please provide the user ID to unban.');
+    const user = options.getMember('user');
+    const duration = options.getInteger('duration');
+    if (!user) return interaction.reply('User not found.');
     try {
-      await message.guild.members.unban(userId);
-      message.channel.send(`User with ID ${userId} has been unbanned.`);
+      await user.timeout(duration * 60 * 1000);
+      interaction.reply(`${user.user.tag} has been muted for ${duration} minute(s).`);
     } catch (error) {
       console.error(error);
-      message.reply('An error occurred while trying to unban the user.');
+      interaction.reply('An error occurred while trying to mute the user.');
     }
   }
 
-  if (inputCommand === 'help') {
-    message.channel.send(
-      'Available commands:\n' +
-        '`vhelp` - Displays this message\n' +
-        '`vkick @user` - Kicks a user\n' +
-        '`vban @user [reason]` - Bans a user with a reason\n' +
-        '`vmute @user [duration in minutes]` - Mutes a user for the specified duration\n' +
-        '`vmember` - Displays the total number of members in the server\n' +
-        '`vunban [user ID]` - Unbans a user by their ID\n' +
-        '`vtop` - Shows the top message senders in the server\n' +
-        '`vtope` - Shows the most commonly used emojis in the server'
-    );
+  if (commandName === 'membercount') {
+    interaction.reply(`This server has ${interaction.guild.memberCount} members.`);
   }
 });
 
