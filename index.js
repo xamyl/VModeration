@@ -100,28 +100,28 @@ client.on('interactionCreate', async (interaction) => {
 
   if (commandName === 'kick') {
     if (!interaction.member.permissions.has(PermissionsBitField.Flags.KickMembers)) {
-      return interaction.reply('You do not have permission to kick members.');
+      return interaction.reply({ content: 'You do not have permission to kick members.', ephemeral: true });
     }
     const user = options.getMember('user');
-    if (!user) return interaction.reply('User not found.');
-    if (!user.kickable) return interaction.reply('I cannot kick this user.');
+    if (!user) return interaction.reply({ content: 'User not found.', ephemeral: true });
+    if (!user.kickable) return interaction.reply({ content: 'I cannot kick this user.', ephemeral: true });
     try {
       await user.kick();
       interaction.reply(`${user.user.tag} has been kicked.`);
     } catch (error) {
       console.error(error);
-      interaction.reply('An error occurred while trying to kick the user.');
+      interaction.reply({ content: 'An error occurred while trying to kick the user.', ephemeral: true });
     }
   }
 
   if (commandName === 'ban') {
     if (!interaction.member.permissions.has(PermissionsBitField.Flags.BanMembers)) {
-      return interaction.reply('You do not have permission to ban members.');
+      return interaction.reply({ content: 'You do not have permission to ban members.', ephemeral: true });
     }
     const user = options.getMember('user');
     const reason = options.getString('reason');
-    if (!user) return interaction.reply('User not found.');
-    if (!user.bannable) return interaction.reply('I cannot ban this user.');
+    if (!user) return interaction.reply({ content: 'User not found.', ephemeral: true });
+    if (!user.bannable) return interaction.reply({ content: 'I cannot ban this user.', ephemeral: true });
     try {
       await user.ban({ reason });
       interaction.reply(`${user.user.tag} has been banned for: **${reason}**.`);
@@ -133,13 +133,13 @@ client.on('interactionCreate', async (interaction) => {
       }
     } catch (error) {
       console.error(error);
-      interaction.reply('An error occurred while trying to ban the user.');
+      interaction.reply({ content: 'An error occurred while trying to ban the user.', ephemeral: true });
     }
   }
 
   if (commandName === 'unban') {
     if (!interaction.member.permissions.has(PermissionsBitField.Flags.BanMembers)) {
-      return interaction.reply('You do not have permission to unban members.');
+      return interaction.reply({ content: 'You do not have permission to unban members.', ephemeral: true });
     }
     const userId = options.getString('userid');
     try {
@@ -147,23 +147,23 @@ client.on('interactionCreate', async (interaction) => {
       interaction.reply(`User with ID ${userId} has been unbanned.`);
     } catch (error) {
       console.error(error);
-      interaction.reply('An error occurred while trying to unban the user.');
+      interaction.reply({ content: 'An error occurred while trying to unban the user.', ephemeral: true });
     }
   }
 
   if (commandName === 'mute') {
     if (!interaction.member.permissions.has(PermissionsBitField.Flags.ModerateMembers)) {
-      return interaction.reply('You do not have permission to mute members.');
+      return interaction.reply({ content: 'You do not have permission to mute members.', ephemeral: true });
     }
     const user = options.getMember('user');
     const duration = options.getInteger('duration');
-    if (!user) return interaction.reply('User not found.');
+    if (!user) return interaction.reply({ content: 'User not found.', ephemeral: true });
     try {
       await user.timeout(duration * 60 * 1000);
       interaction.reply(`${user.user.tag} has been muted for ${duration} minute(s).`);
     } catch (error) {
       console.error(error);
-      interaction.reply('An error occurred while trying to mute the user.');
+      interaction.reply({ content: 'An error occurred while trying to mute the user.', ephemeral: true });
     }
   }
 
